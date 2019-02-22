@@ -1,7 +1,7 @@
 // Converse.js
 // http://conversejs.org
 //
-// Copyright (c) 2013-2018, the Converse.js developers
+// Copyright (c) 2013-2019, the Converse.js developers
 // Licensed under the Mozilla Public License (MPLv2)
 
 import "./converse-disco";
@@ -196,7 +196,7 @@ converse.plugins.add('converse-muc', {
 
                 this.occupants = new _converse.ChatRoomOccupants();
                 this.occupants.browserStorage = new Backbone.BrowserStorage.session(
-                    b64_sha1(`converse.occupants-${_converse.bare_jid}${this.get('jid')}`)
+                    `converse.occupants-${_converse.bare_jid}${this.get('jid')}`
                 );
                 this.occupants.chatroom  = this;
                 this.registerHandlers();
@@ -293,7 +293,7 @@ converse.plugins.add('converse-muc', {
                     'from': _converse.connection.jid,
                     'to': this.getRoomJIDAndNick(nick)
                 }).c("x", {'xmlns': Strophe.NS.MUC})
-                  .c("history", {'maxstanzas': this.get('mam_enabled') ? 0 : _converse.muc_history_max_stanzas}).up();
+                  .c("history", {'maxstanzas': this.features.get('mam_enabled') ? 0 : _converse.muc_history_max_stanzas}).up();
                 if (password) {
                     stanza.cnode(Strophe.xmlElement("password", [], password));
                 }
@@ -405,6 +405,7 @@ converse.plugins.add('converse-muc', {
                 [text, references] = this.parseTextForReferences(text);
 
                 return {
+                    'origin_id': _converse.connection.getUniqueId(),
                     'from': `${this.get('jid')}/${this.get('nick')}`,
                     'fullname': this.get('nick'),
                     'is_spoiler': is_spoiler,
@@ -947,22 +948,6 @@ converse.plugins.add('converse-muc', {
                 return data;
             },
 
-            isDuplicate (message, original_stanza) {
-                // XXX: original_stanza is not used here, but in converse-mam
-                const msgid = message.getAttribute('id'),
-                      jid = message.getAttribute('from');
-
-                if (msgid) {
-                    const msg = this.messages.findWhere({'msgid': msgid, 'from': jid});
-                    if (msg && msg.get('sender') === 'me' && !msg.get('received')) {
-                        msg.save({'received': moment().format()});
-                    }
-                    return msg;
-                }
-                return false;
-
-            },
-
             fetchFeaturesIfConfigurationChanged (stanza) {
                 const configuration_changed = stanza.querySelector("status[code='104']"),
                       logging_enabled = stanza.querySelector("status[code='170']"),
@@ -977,6 +962,74 @@ converse.plugins.add('converse-muc', {
                 }
             },
 
+            isReceipt (stanza) {
+                return sizzle(`received[xmlns="${Strophe.NS.RECEIPTS}"]`, stanza).length > 0;
+            },
+
+            isChatMarker (stanza) {
+                return sizzle(
+                    `received[xmlns="${Strophe.NS.MARKERS}"],
+                     displayed[xmlns="${Strophe.NS.MARKERS}"],
+                     acknowledged[xmlns="${Strophe.NS.MARKERS}"]`, stanza).length > 0;
+            },
+
+            handleReflection (stanza) {
+                /* Handle a MUC reflected message and return true if so.
+                 *
+                 * Parameters:
+                 *  (XMLElement) stanza: The message stanza
+                 */
+                const from = stanza.getAttribute('from');
+                const own_message = Strophe.getResourceFromJid(from) == this.get('nick');
+                if (own_message) {
+                    const msg = this.findDuplicateFromOriginID(stanza);
+                    if (msg) {
+                        const attrs = {};
+                        const stanza_id = sizzle(`stanza-id[xmlns="${Strophe.NS.SID}"]`, stanza).pop();
+                        const by_jid = stanza_id ? stanza_id.getAttribute('by') : undefined;
+                        if (by_jid) {
+                            const key = `stanza_id ${by_jid}`;
+                            attrs[key] = stanza_id.getAttribute('id');
+                        }
+                        if (!msg.get('received')) {
+                            attrs.received = moment().format();
+                        }
+                        msg.save(attrs);
+                    }
+                    return msg ? true : false;
+                }
+            },
+
+            subjectChangeHandled (attrs) {
+                /* Handle a subject change and return `true` if so.
+                 *
+                 * Parameters:
+                 *  (Object) attrs: The message attributes
+                 */
+                if (attrs.subject && !attrs.thread && !attrs.message) {
+                    // https://xmpp.org/extensions/xep-0045.html#subject-mod
+                    // -----------------------------------------------------
+                    // The subject is changed by sending a message of type "groupchat" to the <room@service>,
+                    // where the <message/> MUST contain a <subject/> element that specifies the new subject but
+                    // MUST NOT contain a <body/> element (or a <thread/> element).
+                    u.safeSave(this, {'subject': {'author': attrs.nick, 'text': attrs.subject || ''}});
+                    return true;
+                }
+                return false;
+            },
+
+            ignorableCSN (attrs) {
+                /* Is this a chat state notification that can be ignored,
+                 * because it's old or because it's from us.
+                 *
+                 * Parameters:
+                 *  (Object) attrs: The message attributes
+                 */
+                const is_csn = u.isOnlyChatStateNotification(attrs),
+                        own_message = Strophe.getResourceFromJid(attrs.from) == this.get('nick');
+                return is_csn && (attrs.is_delayed || own_message);
+            },
+
             async onMessage (stanza) {
                 /* Handler for all MUC messages sent to this groupchat.
                  *
@@ -987,36 +1040,30 @@ converse.plugins.add('converse-muc', {
 
                 const original_stanza = stanza,
                       forwarded = sizzle(`forwarded[xmlns="${Strophe.NS.FORWARD}"]`, stanza).pop();
-
                 if (forwarded) {
                     stanza = forwarded.querySelector('message');
                 }
-                if (this.isDuplicate(stanza, original_stanza)) {
-                    return;
+                if (this.handleReflection(stanza) ||
+                        await this.hasDuplicateArchiveID(original_stanza) ||
+                        await this.hasDuplicateStanzaID(stanza) ||
+                        this.handleMessageCorrection(stanza) ||
+                        this.isReceipt(stanza) ||
+                        this.isChatMarker(stanza)) {
+                    return _converse.emit('message', {'stanza': original_stanza});
                 }
-                const jid = stanza.getAttribute('from'),
-                      resource = Strophe.getResourceFromJid(jid),
-                      sender = resource && Strophe.unescapeNode(resource) || '';
+                const attrs = await this.getMessageAttributesFromStanza(stanza, original_stanza);
+                if (attrs.nick &&
+                        !this.subjectChangeHandled(attrs) &&
+                        !this.ignorableCSN(attrs) &&
+                        (attrs['chat_state'] || !u.isEmptyMessage(attrs))) {
 
-                if (!this.handleMessageCorrection(stanza)) {
-                    if (sender === '') {
-                        return;
-                    }
-                    const subject_el = stanza.querySelector('subject');
-                    if (subject_el) {
-                        const subject = _.propertyOf(subject_el)('textContent') || '';
-                        u.safeSave(this, {'subject': {'author': sender, 'text': subject}});
-                    }
-                    const msg = await this.createMessage(stanza, original_stanza);
+                    const msg = this.messages.create(attrs);
+                    this.incrementUnreadMsgCounter(msg);
                     if (forwarded && msg && msg.get('sender')  === 'me') {
                         msg.save({'received': moment().format()});
                     }
-                    this.incrementUnreadMsgCounter(msg);
                 }
-                if (sender !== this.get('nick')) {
-                    // We only emit an event if it's not our own message
-                    _converse.emit('message', {'stanza': original_stanza, 'chatbox': this});
-                }
+                _converse.emit('message', {'stanza': original_stanza, 'chatbox': this});
             },
 
             onPresence (pres) {
