@@ -393,9 +393,9 @@ converse.plugins.add('converse-muc-views', {
             toHTML () {
                 return tpl_add_chatroom_modal(_.extend(this.model.toJSON(), {
                     'heading_new_chatroom': __('Enter a new Groupchat'),
-                    'label_room_address': __('Groupchat address'),
+                    'label_room_address': __('Groupchat name'),
                     'label_nickname': __('Optional nickname'),
-                    'chatroom_placeholder': __('name@conference.example.org'),
+                    'chatroom_placeholder': __('Enter name of the group... No spaces!'),
                     'label_join': __('Join'),
                 }));
             },
@@ -1781,9 +1781,9 @@ converse.plugins.add('converse-muc-views', {
 
             render () {
                 this.el.innerHTML = tpl_room_panel({
-                    'heading_chatrooms': __('Groupchats'),
-                    'title_new_room': __('Add a new groupchat'),
-                    'title_list_rooms': __('Query for groupchats')
+                    'heading_chatrooms': __('GROUP'),
+                    'title_new_room': __('Add a new group'),
+                    'title_list_rooms': __('Find group')
                 });
                 return this;
             },
@@ -1942,7 +1942,7 @@ converse.plugins.add('converse-muc-views', {
                       jid = el.value;
                 if (!jid || _.compact(jid.split('@')).length < 2) {
                     evt.target.outerHTML = tpl_chatroom_invite({
-                        'error_message': __('Please enter a valid XMPP address'),
+                        'error_message': __('Please enter a valid XMPP username'),
                         'label_invitation': __('Invite'),
                     });
                     this.initInviteWidget();
@@ -1971,7 +1971,7 @@ converse.plugins.add('converse-muc-views', {
                 form.addEventListener('submit', this.inviteFormSubmitted.bind(this), false);
                 const el = this.el.querySelector('input.invited-contact');
                 const list = _converse.roster.map(function (item) {
-                        const label = item.get('fullname') || item.get('jid');
+                        const label = item.get('nickname') || item.get('jid');
                         return {'label': label, 'value':item.get('jid')};
                     });
                 const awesomplete = new Awesomplete(el, {

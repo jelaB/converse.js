@@ -341,7 +341,7 @@ converse.plugins.add('converse-minimize', {
                     data.title = this.model.get('name');
                     u.addClass('chat-head-chatroom', this.el);
                 } else {
-                    data.title = this.model.get('fullname');
+                    data.title = this.model.get('nickname');
                     u.addClass('chat-head-chatbox', this.el);
                 }
                 this.el.innerHTML = tpl_trimmed_chat(data);

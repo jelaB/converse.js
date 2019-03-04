@@ -117,11 +117,17 @@ converse.plugins.add('converse-message-view', {
                       role = this.model.vcard ? this.model.vcard.get('role') : null,
                       roles = role ? role.split(',') : [];
 
+                const sender = (this.model.get('sender') === 'them');
+
+                const chatroom = (this.model.get('type') === 'groupchat');
+
                 const msg = u.stringToElement(tpl_message(
                     _.extend(
                         this.model.toJSON(), {
                         '__': __,
                         'is_me_message': is_me_message,
+                        'sender': sender,
+                        'chatroom': chatroom,
                         'roles': roles,
                         'pretty_time': moment_time.format(_converse.time_format),
                         'time': moment_time.format(),
@@ -255,6 +261,15 @@ converse.plugins.add('converse-message-view', {
                         extra_classes += ' mentioned';
                     }
                 }
+
+                //if (this.model.get('type') === 'groupchat') {
+                //    extra_classes += " chatroom";
+                //}
+
+                //if (this.model.get('sender') === 'them') {
+                //   extra_classes += ' sender';
+                //}
+
                 if (this.model.get('correcting')) {
                     extra_classes += ' correcting';
                 }

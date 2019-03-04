@@ -450,7 +450,7 @@ converse.plugins.add('converse-rosterview', {
             },
 
             renderRosterItem (item) {
-                let status_icon = 'fa fa-times-circle';
+                let status_icon = 'fa fa-circle';
                 const show = item.presence.get('show') || 'offline';
                 if (show === 'online') {
                     status_icon = 'fa fa-circle chat-status chat-status--online';
@@ -467,7 +467,7 @@ converse.plugins.add('converse-rosterview', {
                         'display_name': display_name,
                         'desc_status': STATUSES[show],
                         'status_icon': status_icon,
-                        'desc_chat': __('Click to chat with %1$s (JID: %2$s)', display_name, item.get('jid')),
+                        'desc_chat': __('Click to chat with %1$s', display_name),
                         'desc_remove': __('Click to remove %1$s as a contact', display_name),
                         'allow_contact_removal': _converse.allow_contact_removal,
                         'num_unread': item.get('num_unread') || 0

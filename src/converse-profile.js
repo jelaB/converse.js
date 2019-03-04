@@ -110,7 +110,7 @@ converse.plugins.add('converse-profile', {
 
                 const data = {
                     'fn': form_data.get('fn'),
-                    'nickname': form_data.get('nickname'),
+                    'nickname': form_data.get('fn'),
                     'role': form_data.get('role'),
                     'email': form_data.get('email'),
                     'url': form_data.get('url'),
@@ -155,7 +155,7 @@ converse.plugins.add('converse-profile', {
                         'label_online': __('Online'),
                         'label_save': __('Save'),
                         'label_xa': __('Away for long'),
-                        'modal_title': __('Change chat status'),
+                        'modal_title': __('Edit Status'),
                         'placeholder_status_message': __('Personal status message')
                     }));
             },

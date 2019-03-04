@@ -349,8 +349,8 @@ converse.plugins.add('converse-chatview', {
                     this.getToolbarOptions(options || {})
                 );
                 this.el.querySelector('.chat-toolbar').innerHTML = toolbar(options);
-                this.addSpoilerButton(options);
-                this.addFileUploadButton();
+                //this.addSpoilerButton(options);
+                //this.addFileUploadButton();
                 _converse.emit('renderToolbar', this);
                 return this;
             },
@@ -689,6 +689,22 @@ converse.plugins.add('converse-chatview', {
                 const current_msg_date = moment(view.model.get('time')) || moment,
                       previous_msg_date = this.getLastMessageDate(current_msg_date);
 
+
+                const sender = view.model.collection.chatbox.get('jid');
+
+                if ( view.model.get('type') === 'groupchat') {
+                    view.el.getElementsByClassName('chat-msg__heading')[0].className += " chatroom";
+                    _converse.log("Groupchat design! See nicknames!");
+
+                }
+
+                if (view.model.get('sender') === 'them') {
+                    //view.el.getElementsByClassName('chat-msg__content')[0].className += "sender";
+                    _converse.log("Sender, Gray color!");
+
+                }
+
+
                 if (_.isNull(previous_msg_date)) {
                     this.content.insertAdjacentElement('afterbegin', view.el);
                 } else {
@@ -699,6 +715,7 @@ converse.plugins.add('converse-chatview', {
                         // We don't show a duplicate error message
                         return;
                     }
+
                     previous_msg_el.insertAdjacentElement('afterend', view.el);
                     this.markFollowups(view.el);
                 }
