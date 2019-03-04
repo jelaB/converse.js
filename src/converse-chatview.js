@@ -692,19 +692,6 @@ converse.plugins.add('converse-chatview', {
 
                 const sender = view.model.collection.chatbox.get('jid');
 
-                if ( view.model.get('type') === 'groupchat') {
-                    view.el.getElementsByClassName('chat-msg__heading')[0].className += " chatroom";
-                    _converse.log("Groupchat design! See nicknames!");
-
-                }
-
-                if (view.model.get('sender') === 'them') {
-                    //view.el.getElementsByClassName('chat-msg__content')[0].className += "sender";
-                    _converse.log("Sender, Gray color!");
-
-                }
-
-
                 if (_.isNull(previous_msg_date)) {
                     this.content.insertAdjacentElement('afterbegin', view.el);
                 } else {
