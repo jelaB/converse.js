@@ -1781,7 +1781,7 @@ converse.plugins.add('converse-muc-views', {
 
             render () {
                 this.el.innerHTML = tpl_room_panel({
-                    'heading_chatrooms': __('GROUP'),
+                    'heading_chatrooms': __('GROUPS'),
                     'title_new_room': __('Add a new group'),
                     'title_list_rooms': __('Find group')
                 });
@@ -1923,7 +1923,7 @@ converse.plugins.add('converse-muc-views', {
                 const reason = prompt(
                     __('You are about to invite %1$s to the groupchat "%2$s". '+
                        'You may optionally include a message, explaining the reason for the invitation.',
-                       suggestion.text.label, this.model.get('id'))
+                       suggestion.text.label, this.model.chatroom.get("name"))
                 );
                 if (reason !== null) {
                     this.chatroomview.model.directInvite(suggestion.text.value, reason);
