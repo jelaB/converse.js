@@ -569,7 +569,7 @@ converse.plugins.add('converse-chatview', {
                     next_msg_el.insertAdjacentHTML('beforeBegin',
                         tpl_new_day({
                             'isodate': day_date.format(),
-                            'datestring': day_date.format("dddd MMM Do YYYY")
+                            'datestring': day_date.format("dddd, MMMM DD, h:mm a")
                         })
                     );
                 }

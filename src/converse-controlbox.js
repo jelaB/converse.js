@@ -206,7 +206,7 @@ converse.plugins.add('converse-controlbox', {
             className: 'chatbox',
             id: 'controlbox',
             events: {
-                'click a.chatbox-btn.close-chatbox-button.fa.fa-window-minimize': 'close'
+                'click a.chatbox-btn.close-chatbox-button.fa.fa-minus': 'close'
             },
 
             initialize () {

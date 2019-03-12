@@ -129,7 +129,7 @@ converse.plugins.add('converse-message-view', {
                         'sender': sender,
                         'chatroom': chatroom,
                         'roles': roles,
-                        'pretty_time': moment_time.format(_converse.time_format),
+                        'pretty_time': moment_time.format('h:mm a'),
                         'time': moment_time.format(),
                         'extra_classes': this.getExtraMessageClasses(),
                         'label_show': __('Show more'),
