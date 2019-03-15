@@ -67,7 +67,7 @@ serve_bg: dev
 ########################################################################
 ## Translation machinery
 
-GETTEXT = xgettext --language="JavaScript" --keyword=__ --keyword=___ --from-code=UTF-8 --output=locale/converse.pot dist/converse-no-dependencies.js --package-name=Converse.js --copyright-holder="Jan-Carel Brand" --package-version=4.1.1 -c
+GETTEXT = xgettext --language="JavaScript" --keyword=__ --keyword=___ --from-code=UTF-8 --output=locale/converse.pot dist/converse-no-dependencies.js --package-name=Converse.js --copyright-holder="Jan-Carel Brand" --package-version=4.1.2 -c
 
 .PHONY: pot
 pot: dist/converse-no-dependencies-es2015.js
@@ -100,9 +100,14 @@ release:
 	make po2json
 	make build
 	mkdir -p 'converse-assets-$(VERSION)'
-	$(INSTALL) -D dist/converse.min.js 'converse-assets-$(VERSION)/converse.js'
-	$(INSTALL) -D css/converse.min.css \
-		'converse-assets-$(VERSION)/css/converse.css'
+	$(INSTALL) -D dist/converse.js 'converse-assets-$(VERSION)/converse.js'
+	$(INSTALL) -D dist/converse.min.js 'converse-assets-$(VERSION)/converse.min.js'
+	$(INSTALL) -D dist/converse.min.js.map 'converse-assets-$(VERSION)/converse.min.js.map'
+	$(INSTALL) -D dist/converse-headless.js 'converse-assets-$(VERSION)/converse-headless.js'
+	$(INSTALL) -D dist/converse-headless.min.js 'converse-assets-$(VERSION)/converse-headless.min.js'
+	$(INSTALL) -D dist/converse-headless.min.js.map 'converse-assets-$(VERSION)/converse-headless.min.js.map'
+	$(INSTALL) -D css/converse.css 'converse-assets-$(VERSION)/css/converse.css'
+	$(INSTALL) -D css/converse.min.css 'converse-assets-$(VERSION)/css/converse.min.css'
 	cp -r css/webfonts 'converse-assets-$(VERSION)/css/'
 	cp -r sounds 'converse-assets-$(VERSION)/'
 	find locale -type f -name '*.json' \
@@ -124,7 +129,7 @@ stamp-npm: $(LERNA) package.json package-lock.json src/headless/package.json
 .PHONY: clean
 clean:
 	rm -rf node_modules stamp-npm
-	rm -f dist/*.min.js
+	rm -f dist/*.min.js*
 	rm -f css/*.min.css
 	rm -f css/*.map
 	rm -f css/*.zip
@@ -191,6 +196,8 @@ logo/conversejs-filled%.png:: logo/conversejs-filled.svg
 BUILDS = dist/converse.js \
 	dist/converse.min.js \
 	dist/converse-headless.js \
+	src/headless/dist/converse-headless.js \
+	src/headless/dist/converse-headless.min.js \
 	dist/converse-headless.min.js \
 	dist/converse-no-dependencies.min.js \
 	dist/converse-no-dependencies.js \
@@ -202,8 +209,12 @@ dist/converse.min.js: src webpack.config.js stamp-npm @converse/headless
 	$(NPX)  webpack --mode=production
 dist/converse-headless.js: src webpack.config.js stamp-npm @converse/headless
 	$(NPX)  webpack --mode=development --type=headless
+src/headless/dist/converse-headless.js: dist/converse-headless.js
+	cp dist/converse-headless.js src/headless/dist/converse-headless.js
 dist/converse-headless.min.js: src webpack.config.js stamp-npm @converse/headless
 	$(NPX)  webpack --mode=production --type=headless
+src/headless/dist/converse-headless.min.js: dist/converse-headless.min.js
+	cp dist/converse-headless.min.js src/headless/dist/converse-headless.min.js
 dist/converse-no-dependencies.js: src webpack.config.js stamp-npm @converse/headless
 	$(NPX)  webpack --mode=development --type=nodeps
 dist/converse-no-dependencies.min.js: src webpack.config.js stamp-npm @converse/headless
@@ -224,11 +235,14 @@ build:: dev css $(BUILDS)
 
 .PHONY: eslint
 eslint: stamp-npm
-	$(ESLINT) src/
+	$(ESLINT) src/*.js
+	$(ESLINT) src/utils/*.js
+	$(ESLINT) src/headless/*.js
+	$(ESLINT) src/headless/utils/*.js
 	$(ESLINT) spec/
 
 .PHONY: check
-check: dist/converse.js eslint
+check: eslint dist/converse.js 
 	LOG_CR_VERBOSITY=INFO $(CHROMIUM) --disable-gpu --no-sandbox http://localhost:$(HTTPSERVE_PORT)/tests/index.html
 
 ########################################################################

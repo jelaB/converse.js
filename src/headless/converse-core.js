@@ -72,7 +72,7 @@ const _converse = {
     'promises': {}
 }
 
-_converse.VERSION_NAME = "v4.1.1";
+_converse.VERSION_NAME = "v4.1.2";
 
 _.extend(_converse, Backbone.Events);
 
@@ -165,7 +165,7 @@ _converse.TIMEOUTS = { // Set as module attr so that we can override in tests.
 };
 
 // XEP-0085 Chat states
-// http://xmpp.org/extensions/xep-0085.html
+// https://xmpp.org/extensions/xep-0085.html
 _converse.INACTIVE = 'inactive';
 _converse.ACTIVE = 'active';
 _converse.COMPOSING = 'composing';
@@ -396,6 +396,7 @@ _converse.initConnection = function () {
             throw new Error("initConnection: this browser does not support websockets and bosh_service_url wasn't specified.");
         }
     }
+    setUpXMLLogging();
     _converse.emit('connectionInitialized');
 }
 
@@ -419,7 +420,6 @@ function finishInitialization () {
     initClientConfig();
     initPlugins();
     _converse.initConnection();
-    setUpXMLLogging();
     _converse.logIn();
     _converse.registerGlobalEventHandlers();
     if (!Backbone.history.started) {
@@ -439,27 +439,30 @@ function unregisterGlobalEventHandlers () {
 }
 
 function cleanup () {
-    // Looks like _converse.initialized was called again without logging
-    // out or disconnecting in the previous session.
-    // This happens in tests. We therefore first clean up.
-    Backbone.history.stop();
-    _converse.chatboxviews.closeAllChatBoxes();
-    unregisterGlobalEventHandlers();
-    window.localStorage.clear();
-    window.sessionStorage.clear();
-    if (_converse.bookmarks) {
-        _converse.bookmarks.reset();
-    }
-    delete _converse.controlboxtoggle;
-    delete _converse.chatboxviews;
+   // Looks like _converse.initialized was called again without logging
+   // out or disconnecting in the previous session.
+   // This happens in tests. We therefore first clean up.
+   Backbone.history.stop();
+   if (_converse.chatboxviews) {
+      _converse.chatboxviews.closeAllChatBoxes();
+   }
+   unregisterGlobalEventHandlers();
+   window.localStorage.clear();
+   window.sessionStorage.clear();
+   if (_converse.bookmarks) {
+      _converse.bookmarks.reset();
+   }
+   delete _converse.controlboxtoggle;
+   if (_converse.chatboxviews) {
+      delete _converse.chatboxviews;
+   }
+   _converse.connection.reset();
+   _converse.tearDown();
+   _converse.stopListening();
+   _converse.off();
 
-    _converse.connection.reset();
-    _converse.tearDown();
-    _converse.stopListening();
-    _converse.off();
-
-    delete _converse.config;
-    initClientConfig();
+   delete _converse.config;
+   initClientConfig();
 }
 
 
@@ -494,6 +497,14 @@ _converse.initialize = async function (settings, callback) {
                   "authentication with auto_login.");
         }
     }
+
+    _converse.router.route(/^converse\?debug=(true|false)$/, 'debug', debug => {
+        if (debug === "true") {
+            _converse.debug = true;
+        } else {
+            _converse.debug = false;
+        }
+    });
 
     /* Localisation */
     if (!_.isUndefined(i18n)) {
@@ -1187,9 +1198,6 @@ _converse.initialize = async function (settings, callback) {
     };
 
     this.tearDown = function () {
-        /* Remove those views which are only allowed with a valid
-         * connection.
-         */
         _converse.emit('beforeTearDown');
         if (!_.isUndefined(_converse.session)) {
             _converse.session.destroy();

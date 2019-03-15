@@ -1,5 +1,5 @@
 // Converse.js (A browser based XMPP chat client)
-// http://conversejs.org
+// https://conversejs.org
 //
 // Copyright (c) 2012-2017, Jan-Carel Brand <jc@opkode.com>
 // Licensed under the Mozilla Public License (MPLv2)
@@ -62,8 +62,10 @@ converse.plugins.add('converse-bookmarks', {
 
                 const bookmark_button = tpl_chatroom_bookmark_toggle(
                     _.assignIn(this.model.toJSON(), {
-                        info_toggle_bookmark: __('Bookmark this groupchat'),
-                        bookmarked: this.model.get('bookmarked')
+                        'info_toggle_bookmark': this.model.get('bookmarked') ?
+                            __('Unbookmark this groupchat') :
+                            __('Bookmark this groupchat'),
+                        'bookmarked': this.model.get('bookmarked')
                     }));
                 const close_button = this.el.querySelector('.close-chatbox-button');
                 close_button.insertAdjacentHTML('afterend', bookmark_button);
@@ -200,7 +202,8 @@ converse.plugins.add('converse-bookmarks', {
         _converse.api.settings.update({
             allow_bookmarks: true,
             allow_public_bookmarks: false,
-            hide_open_bookmarks: true
+            hide_open_bookmarks: true,
+            muc_respect_autojoin: true
         });
         // Promises exposed by this plugin
         _converse.api.promises.add('bookmarksInitialized');
@@ -248,7 +251,7 @@ converse.plugins.add('converse-bookmarks', {
             },
 
             openBookmarkedRoom (bookmark) {
-                if (bookmark.get('autojoin')) {
+                if ( _converse.muc_respect_autojoin && bookmark.get('autojoin')) {
                     const groupchat = _converse.api.rooms.create(bookmark.get('jid'), bookmark.get('nick'));
                     if (!groupchat.get('hidden')) {
                         groupchat.trigger('show');
