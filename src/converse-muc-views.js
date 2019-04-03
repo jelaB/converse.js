@@ -75,7 +75,11 @@ converse.plugins.add('converse-muc-views', {
                 });
                 this.roomspanel.model.fetch();
                 this.el.querySelector('.controlbox-pane').insertAdjacentElement(
-                    'beforeEnd', this.roomspanel.render().el);
+                    'afterEnd', this.roomspanel.render().el);
+                //this.el.insertAdjacentElement(
+                //    'beforeEnd',
+                //    this.roomspanel.render().el
+                //);
 
                 if (!this.roomspanel.model.get('nick')) {
                     this.roomspanel.model.save({
@@ -415,7 +419,7 @@ converse.plugins.add('converse-muc-views', {
                 if (!_converse.locked_muc_domain) {
                     const muc_domain = this.model.get('muc_domain') || _converse.muc_domain;
                     //placeholder = muc_domain ? `name@${muc_domain}` : __('name@conference.example.org');
-                    placeholder = 'Enter name of the group... No spaces!';
+                    placeholder = 'Create the name for the group.'
                 }
                 return tpl_add_chatroom_modal(_.extend(this.model.toJSON(), {
                     'heading_new_chatroom': __('Enter a new Groupchat'),
@@ -1151,7 +1155,8 @@ converse.plugins.add('converse-muc-views', {
                 const form_el = container_el.querySelector('form.chatroom-form'),
                       fieldset_el = form_el.querySelector('fieldset'),
                       fields = stanza.querySelectorAll('field'),
-                      title = _.get(stanza.querySelector('title'), 'textContent'),
+                      //title = _.get(stanza.querySelector('title'), 'textContent'),
+                      title = 'Configuration of room',
                       instructions = _.get(stanza.querySelector('instructions'), 'textContent');
 
                 u.removeElement(fieldset_el.querySelector('span.spinner'));
@@ -1160,12 +1165,21 @@ converse.plugins.add('converse-muc-views', {
                 if (instructions && instructions !== title) {
                     fieldset_el.insertAdjacentHTML('beforeend', `<p class="form-help">${instructions}</p>`);
                 }
-                _.each(fields, field => {
+
+                for (var i = 0; i < 3; i++) {
+                        const field = fields[i];
+                        if (_converse.roomconfig_whitelist.length === 0 ||
+                            _.includes(_converse.roomconfig_whitelist, field.getAttribute('var'))) {
+                        fieldset_el.insertAdjacentHTML('beforeend', u.xForm2webForm(field, stanza));
+                    }
+                }
+
+               /* _.each(fields, field => {
                     if (_converse.roomconfig_whitelist.length === 0 ||
                             _.includes(_converse.roomconfig_whitelist, field.getAttribute('var'))) {
                         fieldset_el.insertAdjacentHTML('beforeend', u.xForm2webForm(field, stanza));
                     }
-                });
+                });*/
 
                 // Render save/cancel buttons
                 const last_fieldset_el = document.createElement('fieldset');

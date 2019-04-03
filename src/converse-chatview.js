@@ -566,7 +566,8 @@ converse.plugins.add('converse-chatview', {
                     return;
                 }
                 if (_.isNull(prev_msg_date) || moment(next_msg_date).isAfter(prev_msg_date, 'day')) {
-                    const day_date = moment(next_msg_date).startOf('day');
+                    const day_date = moment(next_msg_date);
+                    console.log("MSG date: " + next_msg_date);
                     next_msg_el.insertAdjacentHTML('beforeBegin',
                         tpl_new_day({
                             'isodate': day_date.format(),
@@ -574,6 +575,7 @@ converse.plugins.add('converse-chatview', {
                         })
                     );
                 }
+                //dddd, MMMM DD, h:mm a
             },
 
             getLastMessageDate (cutoff) {

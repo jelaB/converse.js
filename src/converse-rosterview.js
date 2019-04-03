@@ -228,7 +228,7 @@ converse.plugins.add('converse-rosterview', {
                 return tpl_roster_filter(
                     _.extend(this.model.toJSON(), {
                         visible: this.shouldBeVisible(),
-                        placeholder: __('Filter'),
+                        placeholder: __('Search contacts'),
                         title_contact_filter: __('Filter by contact name'),
                         title_group_filter: __('Filter by group name'),
                         title_status_filter: __('Filter by status'),
@@ -574,6 +574,10 @@ converse.plugins.add('converse-rosterview', {
 
             render () {
                 this.el.setAttribute('data-group', this.model.get('name'));
+                this.model.save({state: _converse.CLOSED});
+                   /* this.collapse();
+                    icon_el.classList.remove("fa-caret-down");
+                    icon_el.classList.add("fa-caret-right");*/
                 this.el.innerHTML = tpl_group_header({
                     'label_group': this.model.get('name'),
                     'desc_group_toggle': this.model.get('description'),

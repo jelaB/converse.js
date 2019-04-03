@@ -135,7 +135,7 @@ converse.plugins.add('converse-bookmarks', {
                       { __ } = _converse,
                       body = this.el.querySelector('.chatroom-body');
 
-                _.each(body.children, child => child.classList.add('hidden'));
+                /*_.each(body.children, child => child.classList.add('hidden'));
                 _.each(body.querySelectorAll('.chatroom-form-container'), u.removeElement);
 
                 body.insertAdjacentHTML(
@@ -153,7 +153,13 @@ converse.plugins.add('converse-bookmarks', {
                 );
                 const form = body.querySelector('form.chatroom-form');
                 form.addEventListener('submit', ev =>  this.onBookmarkFormSubmitted(ev));
-                form.querySelector('.button-cancel').addEventListener('click', () => this.closeForm());
+                form.querySelector('.button-cancel').addEventListener('click', () => this.closeForm());*/
+                _converse.bookmarks.createBookmark({
+                    'jid': this.model.get('jid'),
+                    'autojoin': false,
+                    'name':  this.model.get('name'),
+                    'nick':  this.model.get('nick')
+                });
             },
 
             onBookmarkFormSubmitted (ev) {
@@ -446,6 +452,7 @@ converse.plugins.add('converse-bookmarks', {
             },
 
             render () {
+                this.list_model.save({'toggle-state': _converse.CLOSED});
                 this.el.innerHTML = tpl_bookmarks_list({
                     'toggle_state': this.list_model.get('toggle-state'),
                     'desc_bookmarks': __('Click to toggle the bookmarks list'),
