@@ -306,6 +306,8 @@ converse.plugins.add('converse-chatview', {
 
                 this.model.messages.on('add', this.onMessageAdded, this);
                 this.model.messages.on('rendered', this.scrollDown, this);
+				this.setChatState(_converse.INACTIVE, {'silent': true});
+                this.model.sendChatState();
 
                 this.model.on('show', this.show, this);
                 this.model.on('destroy', this.remove, this);
@@ -315,6 +317,7 @@ converse.plugins.add('converse-chatview', {
                 this.render();
 
                 this.fetchMessages();
+                
                 _converse.emit('chatBoxOpened', this);
                 _converse.emit('chatBoxInitialized', this);
             },
@@ -483,6 +486,7 @@ converse.plugins.add('converse-chatview', {
 
             afterMessagesFetched () {
                 this.insertIntoDOM();
+                
                 this.scrollDown();
                 this.content.addEventListener('scroll', this.markScrolled.bind(this));
                 _converse.emit('afterMessagesFetched', this);

@@ -419,14 +419,14 @@ converse.plugins.add('converse-muc-views', {
                 if (!_converse.locked_muc_domain) {
                     const muc_domain = this.model.get('muc_domain') || _converse.muc_domain;
                     //placeholder = muc_domain ? `name@${muc_domain}` : __('name@conference.example.org');
-                    placeholder = 'Create the name for the group.'
+                    placeholder = 'Create a name for the group'
                 }
                 return tpl_add_chatroom_modal(_.extend(this.model.toJSON(), {
-                    'heading_new_chatroom': __('Enter a new Groupchat'),
+                    'heading_new_chatroom': __('Start a new Groupchat'),
                     'label_room_address': __('Groupchat name'),
                     'label_nickname': __('Optional nickname'),
                     'chatroom_placeholder': placeholder,
-                    'label_join': __('Join'),
+                    'label_join': __('Start'),
                 }));
             },
 
@@ -461,7 +461,15 @@ converse.plugins.add('converse-muc-views', {
                 }
                 _converse.api.rooms.open(jid, _.extend(data, {jid}));
                 this.modal.hide();
+                //var pInd = jid.indexOf("@");
+                //var name = jid.substring(0, pInd);
                 ev.target.reset();
+                /* _converse.bookmarks.createBookmark({
+                    'jid': jid,
+                    'autojoin': false,
+                    'name':  name,
+                    'nick':  this.model.get('nick')
+                });*/
             }
         });
 
@@ -1911,7 +1919,7 @@ converse.plugins.add('converse-muc-views', {
                 this.el.innerHTML = tpl_chatroom_sidebar(
                     _.extend(this.chatroomview.model.toJSON(), {
                         'allow_muc_invitations': _converse.allow_muc_invitations,
-                        'label_occupants': __('Participants')
+                        'label_occupants': __('Active participants')
                     })
                 );
                 if (_converse.allow_muc_invitations) {
@@ -1928,7 +1936,7 @@ converse.plugins.add('converse-muc-views', {
                     if (_.isNull(form)) {
                         const heading = this.el.querySelector('.occupants-heading');
                         heading.insertAdjacentHTML(
-                            'afterend',
+                            'afterbegin',
                             tpl_chatroom_invite({
                                 'error_message': null,
                                 'label_invitation': __('Invite'),
@@ -1963,20 +1971,24 @@ converse.plugins.add('converse-muc-views', {
 
 
             promptForInvite (suggestion) {
-                const reason = prompt(
-                    __('You are about to invite %1$s to the groupchat "%2$s". '+
-                       'You may optionally include a message, explaining the reason for the invitation.',
-                       suggestion.text.label, this.model.chatroom.get("name"))
-                );
-                if (reason !== null) {
-                    this.chatroomview.model.directInvite(suggestion.text.value, reason);
-                }
-                const form = suggestion.target.form,
-                      error = form.querySelector('.pure-form-message.error');
-                if (!_.isNull(error)) {
-                    error.parentNode.removeChild(error);
-                }
-                suggestion.target.value = '';
+                const name = this.model.chatroom.get("name");
+                const chatroom_model = this.chatroomview.model;
+                setTimeout( function() {
+                    const reason = prompt(
+                        __('You are about to invite %1$s to the groupchat %2$s. '+
+                           'You may optionally include a message:',
+                           suggestion.text.label, name)
+                    );
+                    if (reason !== null) {
+                        chatroom_model.directInvite(suggestion.text.value, reason);
+                    }
+                    const form = suggestion.target.form,
+                          error = form.querySelector('.pure-form-message.error');
+                    if (!_.isNull(error)) {
+                        error.parentNode.removeChild(error);
+                    }
+                    suggestion.target.value = '';
+                }, 10);
             },
 
             inviteFormSubmitted (evt) {
@@ -1985,7 +1997,7 @@ converse.plugins.add('converse-muc-views', {
                       jid = el.value;
                 if (!jid || _.compact(jid.split('@')).length < 2) {
                     evt.target.outerHTML = tpl_chatroom_invite({
-                        'error_message': __('Please enter a valid XMPP username'),
+                        'error_message': __('Please enter a valid email'),
                         'label_invitation': __('Invite'),
                     });
                     this.initInviteWidget();

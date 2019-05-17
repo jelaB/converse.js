@@ -213,10 +213,10 @@ converse.plugins.add('converse-rosterview', {
             className: 'roster-filter-form',
             events: {
                 "keydown .roster-filter": "liveFilter",
-                "submit form.roster-filter-form": "submitFilter",
+                "submit": "submitFilter",
                 "click .clear-input": "clearFilter",
-                "click .filter-by span": "changeTypeFilter",
-                "change .state-type": "changeChatStateFilter"
+                //"click .filter-by span": "changeTypeFilter",
+                //"change .state-type": "changeChatStateFilter"
             },
 
             initialize () {
@@ -227,7 +227,8 @@ converse.plugins.add('converse-rosterview', {
             toHTML () {
                 return tpl_roster_filter(
                     _.extend(this.model.toJSON(), {
-                        visible: this.shouldBeVisible(),
+                        //visible: this.shouldBeVisible(),
+                        visible: true,
                         placeholder: __('Search contacts'),
                         title_contact_filter: __('Filter by contact name'),
                         title_group_filter: __('Filter by group name'),
@@ -267,6 +268,9 @@ converse.plugins.add('converse-rosterview', {
             },
 
             liveFilter: _.debounce(function (ev) {
+                if( ev.keyCode == 13) {
+                    ev.preventDefault();
+                }
                 this.model.save({
                     'filter_text': this.el.querySelector('.roster-filter').value
                 });
@@ -274,6 +278,9 @@ converse.plugins.add('converse-rosterview', {
 
             submitFilter (ev) {
                 if (ev && ev.preventDefault) { ev.preventDefault(); }
+                if( ev.keyCode == 13) {
+                    ev.preventDefault();
+                }
                 this.liveFilter();
                 this.render();
             },
@@ -294,11 +301,12 @@ converse.plugins.add('converse-rosterview', {
             },
 
             showOrHide () {
-                if (this.shouldBeVisible()) {
+               /* if (this.shouldBeVisible()) {
                     this.show();
                 } else {
                     this.hide();
-                }
+                }*/
+                this.show();
             },
 
             show () {
@@ -326,6 +334,26 @@ converse.plugins.add('converse-rosterview', {
                 const roster_filter = this.el.querySelector('.roster-filter');
                 roster_filter.value = '';
                 this.model.save({'filter_text': ''});
+                this.model.save({state: _converse.CLOSED});
+
+                _.each(document.getElementsByTagName("a"), function(link) {
+
+                    if(!_.isUndefined(link.getElementsByTagName("span")) && link.getElementsByTagName("span").length == 1) {
+
+
+                        const group_arrow = link.getElementsByTagName("span")[0];
+
+                        if(_.includes(group_arrow.classList, "fa-caret-down")) {
+                            group_arrow.classList.remove("fa-caret-down");
+                            group_arrow.classList.add("fa-caret-right");
+                        }
+                    }
+                });
+
+                _.each(document.getElementsByClassName("roster-group-contacts"), function (contacts_group) { 
+                    u.slideIn(contacts_group);
+                });
+                
             }
         });
 
@@ -854,6 +882,17 @@ converse.plugins.add('converse-rosterview', {
                     });
                 } else {
                     _.each(this.getAll(), function (view) {
+                        if( query != '') {
+                            const comp = (view.el.getElementsByTagName("a")[0]).getElementsByTagName("span")[0];
+                            if (_.includes(comp.classList, "fa-caret-right")) {
+                                //comp.classList.remove("fa-caret-right");
+                                //comp.classList.add("fa-caret-down");
+                                var click_ev = document.createEvent("MouseEvents");
+                                click_ev.initEvent("click", true, true);
+                                view.el.getElementsByTagName("a")[0].dispatchEvent(click_ev);
+                            }
+                            
+                        }
                         view.filter(query, type);
                     });
                 }

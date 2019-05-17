@@ -1296,6 +1296,9 @@ converse.plugins.add('converse-muc', {
             let contact = _converse.roster.get(from).vcard.get("fullname");
             let result;
 
+            var idx = room_jid.indexOf("@");
+            var roomName = room_jid.substring(0, idx);
+
             if (_converse.auto_join_on_invite) {
                 result = true;
             } else {
@@ -1303,17 +1306,26 @@ converse.plugins.add('converse-muc', {
                 //contact = contact? contact.get('fullname'): Strophe.getNodeFromJid(from);
                 if (!reason) {
                     result = confirm(
-                        __("%1$s has invited you to join a groupchat: %2$s", contact, room_jid)
+                        __("%1$s has invited you to join a groupchat %2$s", contact, roomName)
                     );
                 } else {
                     result = confirm(
-                        __('%1$s has invited you to join a groupchat: %2$s, and left the following reason: "%3$s"',
-                            contact, room_jid, reason)
+                        __('%1$s has invited you to join a groupchat %2$s. "%3$s"',
+                            contact, roomName, reason)
                     );
                 }
             }
             if (result === true) {
                 const chatroom = _converse.openChatRoom(room_jid, {'password': x_el.getAttribute('password') });
+
+               /* var pInd = room_jid.indexOf("@");
+                var name = room_jid.substring(0, pInd);
+                 _converse.bookmarks.createBookmark({
+                    'jid': room_jid,
+                    'autojoin': false,
+                    'name':  name,
+                    'nick':  contact
+                });*/
 
                 if (chatroom.get('connection_status') === converse.ROOMSTATUS.DISCONNECTED) {
                     // XXX: Leaky abstraction from views here
