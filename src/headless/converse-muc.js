@@ -1318,14 +1318,20 @@ converse.plugins.add('converse-muc', {
             if (result === true) {
                 const chatroom = _converse.openChatRoom(room_jid, {'password': x_el.getAttribute('password') });
 
-               /* var pInd = room_jid.indexOf("@");
+                var pInd = room_jid.indexOf("@");
                 var name = room_jid.substring(0, pInd);
                  _converse.bookmarks.createBookmark({
                     'jid': room_jid,
                     'autojoin': false,
                     'name':  name,
                     'nick':  contact
-                });*/
+                });
+                  /*const models = _converse.bookmarks.where({'jid': jid});
+                    if (!models.length) {
+                        this.model.save('bookmarked', false);
+                    } else {
+                        this.model.save('bookmarked', true);
+                    }*/
 
                 if (chatroom.get('connection_status') === converse.ROOMSTATUS.DISCONNECTED) {
                     // XXX: Leaky abstraction from views here

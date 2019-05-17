@@ -461,15 +461,21 @@ converse.plugins.add('converse-muc-views', {
                 }
                 _converse.api.rooms.open(jid, _.extend(data, {jid}));
                 this.modal.hide();
-                //var pInd = jid.indexOf("@");
-                //var name = jid.substring(0, pInd);
+                var pInd = jid.indexOf("@");
+                var name = jid.substring(0, pInd);
                 ev.target.reset();
-                /* _converse.bookmarks.createBookmark({
+                 _converse.bookmarks.createBookmark({
                     'jid': jid,
                     'autojoin': false,
                     'name':  name,
                     'nick':  this.model.get('nick')
-                });*/
+                });
+                 /*const models = _converse.bookmarks.where({'jid': jid});
+                    if (!models.length) {
+                        this.model.save('bookmarked', false);
+                    } else {
+                        this.model.save('bookmarked', true);
+                    }*/
             }
         });
 
