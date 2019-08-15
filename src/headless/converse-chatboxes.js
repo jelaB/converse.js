@@ -231,6 +231,7 @@ converse.plugins.add('converse-chatboxes', {
                     'num_unread': 0,
                     'type': _converse.PRIVATE_CHAT_TYPE,
                     'url': ''
+                    //'minimized': true
                 }
             },
 
